@@ -1,0 +1,124 @@
+@ec2 = http://ec2-3-16-82-76.us-east-2.compute.amazonaws.com
+
+@lambda = https://4e5i36hp9b.execute-api.eu-central-1.amazonaws.com/dev
+@localhost = http://127.0.0.1:8000
+
+
+@base_url = {{localhost}}
+
+
+
+
+// REGION APIs
+
+###
+GET  {{base_url}}/locations/locations-in-region/8/
+Content-Type: application/json
+Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+
+
+// DISTRICT APIs
+
+###
+POST  {{base_url}}/locations/create-district/
+Content-Type: application/json
+
+{
+    "name": "Kitob",
+    "region": 8
+}
+
+
+###
+PUT {{base_url}}/locations/update-district/1/
+Content-Type: application/json
+
+{
+    "name": "Qarshi",
+    "region": 8
+}
+
+
+###
+DELETE  {{base_url}}/locations/delete-district/3/
+Content-Type: application/json
+
+
+###
+GET {{base_url}}/locations/districts-in-region/8/
+Content-Type: application/json
+
+
+
+
+// TOWN APIs
+
+###
+POST  {{base_url}/}/locations/create-town/
+Content-Type: application/json
+
+{
+    "name": "A.Omonov",
+    "district": 1
+}
+
+
+###
+PUT {{base_url}}/locations/update-town/5/
+Content-Type: application/json
+
+{
+    "name": "A.OOMONOV",
+    "district": 1
+}
+
+
+###
+DELETE  {{base_url}}/locations/delete-town/5/
+Content-Type: application/json
+
+
+
+###
+GET {{base_url}}/locations/towns-in-district/1/
+Content-Type: application/json
+
+
+
+// CONTOUR APIs
+
+###
+POST  {{base_url}}/locations/create-contour/
+Content-Type: application/json
+
+{
+    "number": 208,
+    "size": 80,
+    "region": 8,
+    "town": 1,
+    "supervisor": 5,
+    "farmer":11
+}
+
+###
+PUT {{base_url}}/locations/update-contour/2/
+Content-Type: application/json
+
+{
+    "number": 208,
+    "size": 80,
+    "region": 8,
+    "town": 1,
+    "supervisor": 9,
+    "farmer": 11
+}
+
+###
+DELETE  {{base_url}}/locations/delete-contour/2/
+Content-Type: application/json
+
+###
+GET {{base_url}}/locations/contours-of-supervisor/5/
+Content-Type: application/json
+
+

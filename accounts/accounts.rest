@@ -1,0 +1,174 @@
+
+# roles:
+# 
+# ROLE_CHOICES = (
+#       (2, 'governor'),
+#       (3, 'editor'),
+#       (4, 'district_officer'),
+#       (5, "town_officer"),
+#       (6, 'supervisor_or_farmer')
+#     )
+
+
+@localhost = http://127.0.0.1:8000
+@lambda =  https://4e5i36hp9b.execute-api.eu-central-1.amazonaws.com/dev
+@base_url = {{localhost}}
+
+
+// GENARAL ACCOUNT APIs
+
+
+###
+POST {{base_url}}/accounts/auto-login/
+Content-Type: application/json
+Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+
+{
+    "platform": 3
+}
+
+
+###
+PUT {{base_url}}/accounts/change-password/
+Content-Type: application/json
+Authorization: Token a485cb642ef9c6c45174759eb46a4d7585eef659
+
+{
+    "old_password" : "B2FsbgDFSw",
+    "new_password": "hello"
+}
+
+
+###
+DELETE {{base_url}}/accounts/delete-user/12/
+Content-Type: application/json
+
+
+
+
+// EDITOR APIs
+
+###
+POST {{base_url}}/accounts/login-editor/
+Content-Type: application/json
+
+{
+    "username" : "editor",
+    "password" : "hello0909"
+}
+
+
+
+
+// LOCALSUPERVISOR APIs
+
+###
+POST {{base_url}}/accounts/create-supervisor/
+Content-Type: application/json
+
+{
+    "username" : "supervisor1",
+    "first_name" : "Sharif",
+    "last_name": "Muratov",
+    "phone": "+998905567788",
+    "role": 6,
+    "town_id": 1,
+    "contours_from": 0,
+    "contours_to": 12
+}
+
+
+###
+PUT {{base_url}}/accounts/update-supervisor/9/
+Content-Type: application/json
+
+{
+    "username" : "brown0910",
+    "first_name" : "Sharif",
+    "last_name": "Muratov",
+    "phone": "+998905567788",
+    "town_id": 1,
+    "contours_from":0,
+    "contour_to": 12
+}
+//role is not updates
+
+
+
+###
+POST {{base_url}}/accounts/login-supervisor/
+Content-Type: application/json
+
+
+{
+    "username" : "supervisor1",
+    "password" : "slimptor"
+}
+
+
+###
+GET {{base_url}}/accounts/supervisors-in-region/8/
+Content-Type: application/json
+Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+
+
+
+// OBSERVER APIs
+
+###
+POST {{base_url}}/accounts/create-observer/
+Content-Type: application/json
+
+{
+    "username" : "district_officer1",
+    "first_name" : "Sharif",
+    "last_name": "Muratov",
+    "phone": "+998905567788",
+    "role": 4,
+    "towns": [], 
+    "districts": [1,2]
+}
+
+
+###
+POST {{base_url}}/accounts/update-observer/12/
+Content-Type: application/json
+
+{
+    "username" : "shaxbozzzz0910",
+    "first_name" : "Sharif",
+    "last_name": "Muratov",
+    "phone": "+998905567788",
+    "role": 4,
+    "districts": [1,2],
+    "towns": []
+
+}
+
+
+###
+GET {{base_url}}/accounts/observers-in-region/8/
+Content-Type: application/json
+Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+
+
+// FARMER APIs
+
+###
+POST {{base_url}}/accounts/create-farmer/
+Content-Type: application/json
+
+{
+    "username" : "farmer5",
+    "first_name" : "Sharif",
+    "last_name": "Muratov",
+    "phone": "+998905567788",
+    "role": 6,
+    "district": 1
+
+}
+
+
+###
+GET {{base_url}}/accounts/farmers-in-district/1/
+Content-Type: application/json

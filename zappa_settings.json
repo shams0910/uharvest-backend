@@ -1,0 +1,13 @@
+{
+    "dev": {
+        "aws_region": "eu-central-1",
+        "django_settings": "uharvestbackend.settings",
+        "profile_name": "awsuser",
+        "project_name": "uharvestbackend",
+        "runtime": "python3.8",
+        "s3_bucket": "zappa-1jy2uf8xo"
+    },
+    "sms":{
+    	"extends":"dev"
+    }
+}

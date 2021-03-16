@@ -1,0 +1,101 @@
+
+@localhost = http://127.0.0.1:8000
+@lambda =  https://4e5i36hp9b.execute-api.eu-central-1.amazonaws.com/dev
+@base_url = {{localhost}}
+
+
+# CropChoices APIs
+
+###
+GET  http://127.0.0.1:8000/core/cropchoices-with-cropgroups/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+
+
+# Task APIs
+
+###
+GET  http://127.0.0.1:8000/core/tasks-of-cropchoice/1/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+
+
+# Crop APIs
+
+###
+POST  {{base_url}}/core/create-crop/
+Content-Type: application/json
+
+{
+    "crop_choice_id": 1,
+    "contour_id": 1,
+    "description" : "Text here",
+    "size": 12.4,
+    "seed": 100,
+    "year":2021
+}
+
+###
+PUT {{base_url}}/locations/update-crop/2/
+Content-Type: application/json
+
+{
+    "crop_choice_id":1,
+    "contour_id": 1,
+    "description" : "Text here",
+    "size": 12.4,
+    "seed": 100,
+    "year":2021,
+    "harvest_size": 1000
+}
+
+###
+GET  http://127.0.0.1:8000/core/crops-in-contour/1/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+###
+DELETE  http://127.0.0.1:8000/core/delete-crop/7/
+Content-Type: application/json
+
+
+// TASK_PROGRESS APIs
+
+###
+POST  {{base_url}}/core/create-tps-in-date/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+{
+    "date": "2021-03-14",
+    "task_id": 2,
+    "cropchoice_id":1,
+    "year": 2021
+}
+
+###
+PUT {{base_url}}/core/update-tp/23/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+{
+    "size":13.4
+}
+
+###
+GET  http://127.0.0.1:8000/core/tp-of-task-by-contours/1/in-year/2021/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+
+
+###
+GET  http://127.0.0.1:8000/core/tp-by-town-in-district/1/in-date/2023-02-19/
+Content-Type: application/json
+
+
+###
+GET  http://127.0.0.1:8000/core/tp-by-town-in-district/1/in-month/02/2021/
+Content-Type: application/json
