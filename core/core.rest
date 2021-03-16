@@ -16,7 +16,7 @@ Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 # Task APIs
 
 ###
-GET  http://127.0.0.1:8000/core/tasks-of-cropchoice/1/
+GET  http://127.0.0.1:8000/core/tasks-of-cropchoice/1/in-year/2021/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 

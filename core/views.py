@@ -19,7 +19,25 @@ from .serializers import (
 	TaskProgressWithContourSerializer
 )
 
-# crop choice views here
+# resources
+
+def to_dict_from_raw(queryset):
+	data = []
+	for instance in queryset:
+		item = instance.__dict__
+		item.pop('_state')
+		data.append(item)
+	return(data)
+
+# class ErrorResponse():
+# 	def __init__(self, details):
+
+	
+
+'''
+CROP CHOICE VIEWS HERE
+'''
+
 class CropChoicesWithCropGroups(APIView):
 	def get(self, request):
 		crop_choices = CropChoice.objects.all().values()
@@ -28,18 +46,34 @@ class CropChoicesWithCropGroups(APIView):
 		return Response({'crop_choices': crop_choices, 'crop_groups':crop_groups})
 
 
-# task views here
-class TasksOfCropChoice(APIView):
-	def get(self, request, cropchoice_id):
-		tasks = Task.objects.filter(crop_choice_id=cropchoice_id)
-		serialized_tasks = TaskSerializer(tasks, many=True).data
+
+
+'''
+TASK VIEWS HERE
+'''
+class TasksOfCropChoiceInYear(APIView):
+	def get(self, request, cropchoice_id, year):
+		tasks = Task.objects.raw(
+			'SELECT task.*, sum(tp.size) AS completed_size, SUM(crop.size) AS total_size, MIN(crop.year) as year\
+				FROM core_task AS task\
+				LEFT join core_taskprogress AS tp ON tp.task_id=task.id\
+				LEFT join core_crop AS crop ON crop.id=tp.crop_id\
+				WHERE task.crop_choice_id=%s AND (crop.year=%s OR crop.year is NULL)\
+				GROUP BY task.id', [cropchoice_id, year])
+		serialized_tasks = to_dict_from_raw(tasks)
+		year_set = set(task['year'] for task in serialized_tasks)
+
+		if None in year_set and len(year_set) == 1:
+			return Response({'details': 'you dont have crops in this year, please add them and go back'}, status.HTTP_204_NO_CONTENT)
+
 		return Response(serialized_tasks)
 
 
-# crop views here
-# class CreateCrop(CreateAPIView):
-# 	queryset = Crop.objects.all()
-# 	serializer_class = CropSerializer
+
+
+'''
+CROP VIEWS HERE
+'''
 
 class CreateCrop(APIView):
 	def post(self, request):
@@ -49,7 +83,6 @@ class CreateCrop(APIView):
 			return Response({'details': f'{e}'}, status.HTTP_400_BAD_REQUEST)
 		serialized_crop = CropSerializer(crop).data
 		return Response(serialized_crop)
-
 
 class UpdateCrop(UpdateAPIView):
 	queryset = Crop.objects.all()
@@ -66,7 +99,12 @@ class CropsInContour(APIView):
 		return Response(serialized_crops_in_contour)
 
 
-# taskprogress views here
+
+
+'''
+TASKPROGRESS VIEWS HERE
+'''
+
 class CreateTaskProgress(CreateAPIView):
 	queryset = TaskProgress.objects.all()
 	serializer_class = TaskProgressSerializer
@@ -104,9 +142,6 @@ class CreateTaskProgressesInDate(APIView):
 		return Response([crop_ids, request.user.id])
 
 
-# class
-
-
 class UpdateTaskProgress(UpdateAPIView):
 	queryset = TaskProgress.objects.all()
 	serializer_class = TaskProgressSerializer
@@ -130,7 +165,6 @@ class TaskProgressesOfTaskByContoursInYear(APIView):
 
 
 class TaskProgressesByTownInDistrictInDate(APIView):
-	# Get TaskProgresses(TP) by towns in district. Output will be sum of TP in HE
 	def get(self, request, district_id, date):
 		try:
 			date = datetime.datetime.strptime(date, '%Y-%m-%d').date()		
@@ -148,19 +182,9 @@ class TaskProgressesByTownInDistrictInDate(APIView):
 			GROUP by task.id, town.id',
 			[district_id, date]
 			)
-		data = []
-		for tp in task_progresses:
-			item = tp.__dict__
-			item.pop('_state')
-			data.append(item)
-			print(item)
-		return Response(data) 
-		select task.*, sum(tp.size) as completed_size, sum(crop.size) as total_size
-from core_task as task
-full join core_taskprogress as tp on tp.task_id=task.id
-full join core_crop as crop on crop.id=tp.crop_id
-where task.crop_choice_id=1 and (crop.year=2021 or crop.year is null)
-group by task.id
+		serialized_task_progresses = to_dict_from_raw(task_progresses)
+		return Response(serialized_task_progresses) 
+		
 
 # class ListTaskProgressesByTownInDistrictInMonth(APIView):
 # 	# Get TaskProgresses(TP) by towns in district. Output will be sum of TP in HE

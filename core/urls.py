@@ -8,7 +8,7 @@ urlpatterns = [
 	path('cropchoices-with-cropgroups/', views.CropChoicesWithCropGroups.as_view()),
 
 	# task urls here
-	path('tasks-of-cropchoice/<int:cropchoice_id>/', views.TasksOfCropChoice.as_view()),
+	path('tasks-of-cropchoice/<int:cropchoice_id>/in-year/<int:year>/', views.TasksOfCropChoiceInYear.as_view()),
 	
 	# crop urls here
 	path('create-crop/', views.CreateCrop.as_view()),
