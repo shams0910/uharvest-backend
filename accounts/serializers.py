@@ -74,6 +74,12 @@ class ObserverCreateSerializer(serializers.ModelSerializer):
 		return user
 
 
+class GovernorSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Account
+		fields = ['username', 'id', 'first_name', 'last_name', 'phone', 'role', 'region']
+
+
 class DistrictObserverSerializer(serializers.ModelSerializer):
 	district_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 	class Meta:

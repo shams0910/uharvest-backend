@@ -7,6 +7,12 @@
         "runtime": "python3.8",
         "s3_bucket": "zappa-1jy2uf8xo"
     },
+    "prod":{
+        "extends":"dev",
+        "environment_variables": {
+            "DEBUG": 0
+        }
+    },
     "sms":{
     	"extends":"dev"
     }

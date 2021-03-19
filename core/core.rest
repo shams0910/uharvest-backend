@@ -12,6 +12,13 @@ Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
+###
+GET  http://127.0.0.1:8000/core/cropchoices-with-tasks-in-region/8/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+
+
 
 # Task APIs
 
@@ -20,6 +27,11 @@ GET  http://127.0.0.1:8000/core/tasks-of-cropchoice/1/in-year/2021/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
+
+###
+GET  http://127.0.0.1:8000/core/tasks-of-cropchoice/1/in-town/1/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 # Crop APIs
@@ -92,8 +104,15 @@ Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 ###
-GET  http://127.0.0.1:8000/core/tp-by-town-in-district/1/in-date/2023-02-19/
+GET  http://127.0.0.1:8000/core/tp-of-cropchoice/1/by-town-in-district/1/in-date/2021-10-19/
 Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+
+
+###
+GET  http://127.0.0.1:8000/core/tp-of-cropchoice/1/by-district-in-region/8/in-date/2010-11-2/
+Content-Type: application/json
+Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 ###

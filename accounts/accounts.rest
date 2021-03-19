@@ -21,10 +21,10 @@
 ###
 POST {{base_url}}/accounts/auto-login/
 Content-Type: application/json
-Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+Authorization: Token 0cb48289ee385215f92c644ee455b92f6eac126c
 
 {
-    "platform": 3
+    "platform": [2,3]
 }
 
 
@@ -114,6 +114,16 @@ Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
 
 
 // OBSERVER APIs
+
+###
+POST {{base_url}}/accounts/login-observer/
+Content-Type: application/json
+
+{
+    "username" : "governor08",
+    "password" : "hello0909"
+}
+
 
 ###
 POST {{base_url}}/accounts/create-observer/

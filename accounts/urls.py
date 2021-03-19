@@ -21,7 +21,7 @@ urlpatterns = [
 	# add farmer contours
 
 	# observer urls here
-	# path('login-observer/', views.LoginObserver.as_view()),
+	path('login-observer/', views.LoginObserver.as_view()),
 	path('create-observer/', views.CreateObserver.as_view()),
 	# path('update-observer/<int:pk>/', views.UpdateSupervisor.as_view()),
 	path('observers-in-region/<int:region_id>/', views.ObserversInRegion.as_view()),

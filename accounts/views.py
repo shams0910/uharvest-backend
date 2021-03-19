@@ -11,7 +11,7 @@ from rest_framework import authentication, permissions, status
 
 # serializer imports
 from .serializers import (
-	EditorSerializer, SupervisorGetSerializer, FarmerGetSerializer,
+	EditorSerializer, SupervisorGetSerializer, FarmerGetSerializer, GovernorSerializer,
 	ObserverCreateSerializer, DistrictObserverSerializer, TownObserverSerializer,
 	ChangePasswordSerializer
 )
@@ -33,15 +33,21 @@ class AutoLogin(APIView):
 	def post(self, request):
 		user = request.user
 		platform = request.data.get("platform")
-		if user.role == platform:
+
+		if type(platform) is not list: platform = [platform]
+		print(user.role, platform)
+		if user.role in platform:
 			token = request.auth
-			if platform == 3:
+
+			if user.role == 3:
 				serialized_user = EditorSerializer(user).data
-			elif platform == 6:
+			elif user.role == 6:
 				serialized_user = SupervisorGetSerializer(user).data
-			elif platform == 4:
+			elif user.role == 2:
+				serialized_user = SupervisorGetSerializer(user).data
+			elif user.role == 4:
 				serialized_user = DistrictObserverSerializer(user).data
-			elif platform == 5:
+			elif user.role == 5:
 				serialized_user = TownObserverSerializer(user).data
 			
 			return Response({'token': token.key, 'user': serialized_user}, status=status.HTTP_200_OK)
@@ -256,20 +262,23 @@ class ObserversInRegion(APIView):
 class LoginObserver(APIView):
 	permission_classes = []
 	def post(self, request):
-		def post(self, request):
-			user = authenticate(
-				username=request.data.get('username'), 
-				password=request.data.get("password")
-			)
-			if user is not None:
-				if user.is_active:
-					token = Token.objects.get_or_create(user=user)
-					if user.role == 4:
-						serialized_user = DistrictObserverSerializer(user).data
-					elif user.role == 5:
-						serialized_user = TownObserverSerializer(user).data
-					return Response({})
-			return Response({"details": 'Login or password is wrong'}, status.HTTP_401_UNAUTHORIZED)
+		user = authenticate(
+			username=request.data.get('username'), 
+			password=request.data.get("password")
+		)
+		if user is not None:
+			if user.is_active:
+				token, created = Token.objects.get_or_create(user=user)
+				if user.role == 2:
+					serialized_user = GovernorSerializer(user).data
+				elif user.role == 4:
+					serialized_user = DistrictObserverSerializer(user).data
+				elif user.role == 5:
+					serialized_user = TownObserverSerializer(user).data
+				
+				return Response({'token':token.key, 'user': serialized_user})
+
+		return Response({"details": 'Login or password is wrong'}, status.HTTP_401_UNAUTHORIZED)
 
 
 
