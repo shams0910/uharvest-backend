@@ -1,6 +1,10 @@
 from rest_framework.serializers import Serializer, ModelSerializer, CharField, IntegerField
 from .models import CropChoice, Crop, Task, TaskProgress
 from accounts.models import Farmer
+
+
+
+
 # cropchoice seriliazers 
 class CropChoiceSerializer(ModelSerializer):
 	class Meta:
@@ -40,6 +44,7 @@ class FarmerSerializer(Serializer):
 	last_name = CharField(source='user.last_name')
 	first_name = CharField(source='user.first_name')
 	phone = CharField(source='user.phone')
+
 
 class TaskProgressWithContourSerializer(ModelSerializer):
 	contour_number = IntegerField(source='crop.contour.number')

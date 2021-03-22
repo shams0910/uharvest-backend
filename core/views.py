@@ -1,11 +1,12 @@
-import datetime 
+import datetime
+
+#django
+from django.db.models import Sum, Count, Q
+
+#rest freamewoork
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions, status
-from .models import CropChoice, Crop, Task, TaskProgress
-from locations.models import Town
-from django.db.models import Sum, Count, Q
-
 from rest_framework.generics import (
 	CreateAPIView,
 	UpdateAPIView,
@@ -13,6 +14,11 @@ from rest_framework.generics import (
 	ListAPIView
 )
 
+#models
+from .models import CropChoice, Crop, Task, TaskProgress
+from locations.models import Town, District
+
+#serializers
 from .serializers import (
 	CropChoiceSerializer,
 	CropSerializer,
@@ -29,17 +35,14 @@ def to_dict_from_raw(queryset):
 		item = instance.__dict__
 		item.pop('_state')
 		data.append(item)
-	return(data)
+	return data
 
-def current_cotton_year():
-	today = datetime.date.today()
-	year = today.year
-	month = today.month
+def cotton_year_in_date(date=datetime.date.today()):
+	year = date.year
+	month = date.month
 	if month >= 11: year +=1
 	return year
 
-# class ErrorResponse():
-# 	def __init__(self, details):
 
 	
 
@@ -50,8 +53,10 @@ CROP CHOICE VIEWS HERE
 class CropChoicesWithCropGroups(APIView):
 	def get(self, request):
 		crop_choices = CropChoice.objects.all().values()
+
 		crop_groups = CropChoice._meta.get_field('crop_group').choices
 		crop_groups = list({'id':value, 'name': text} for value, text in crop_groups)
+
 		return Response({'crop_choices': crop_choices, 'crop_groups':crop_groups})
 
 
@@ -59,21 +64,23 @@ class CropChoicesWithTasks(APIView):
 	def get(self, request, region):
 		today = datetime.date(2021,1,13)
 		tasks = Task.objects\
-			.filter(start_date__lte=today, end_date__gte=today, taskprogress__crop__year=2021)\
-			.annotate(completed_size = Sum('taskprogress__size')).values()
+					.filter(start_date__lte=today, end_date__gte=today, taskprogress__crop__year=2021)\
+					.annotate(completed_size = Sum('taskprogress__size'))\
+					.values()
 		
 
 		last_7_days = tuple( (today - datetime.timedelta(days=n)).strftime('%Y-%m-%d') for n in range(1,7) )
 
 		tp_of_last_7_days = TaskProgress.objects.raw(
-		'''
-		SELECT tp.date, sum(tp.size), tp.task_id as id
-		from core_taskprogress as tp
-		join core_crop as crop on tp.crop_id = crop.id 
-		where crop.year=2021 and tp.date in %s
-		group by tp.date, tp.task_id
-		''', [last_7_days]
-		)
+								'''
+								SELECT tp.date, sum(tp.size), tp.task_id as id
+								from core_taskprogress as tp
+								join core_crop as crop on tp.crop_id = crop.id 
+								where crop.year=2021 and tp.date in %s
+								group by tp.date, tp.task_id
+								''', [last_7_days]
+							)
+
 		tp_of_last_7_days_serialized = to_dict_from_raw(tp_of_last_7_days)
 
 		for task in tasks:
@@ -123,23 +130,103 @@ class TasksOfCropChoiceInYear(APIView):
 		return Response(serialized_tasks)
 
 
-
 class TasksOfCropChoiceInTown(APIView):
 	def get(self, request, cropchoice_id, town_id):
-		year = current_cotton_year()
-		tasks = Task.objects.filter(
-			crop_choice_id=cropchoice_id, 
-			taskprogress__crop__year=year,
-			taskprogress__crop__contour__town_id=town_id
-			)\
-		.annotate(completed_size=Sum('taskprogress__size')).values()
-		town = Town.objects.filter(Q(id=town_id) & 
-					(Q(contour__crop__year=year) | Q(contour__crop__year__isnull=True)), 
-					(Q(contour__crop__crop_choice_id=cropchoice_id) | Q(contour__crop__crop_choice_id__isnull=True) ) )\
-			.annotate(total_size=Sum('contour__crop__size')).values()[0]
+		year = cotton_year_in_date()
+		tasks = Task.objects\
+					.filter(
+						crop_choice_id=cropchoice_id, 
+						taskprogress__crop__year=year,
+						taskprogress__crop__contour__town_id=town_id
+					)\
+					.annotate(completed_size=Sum('taskprogress__size'))\
+					.values()
+		
+		town = Town.objects\
+					.filter(
+						Q(id=town_id) & (Q(contour__crop__year=year) | Q(contour__crop__year__isnull=True)), 
+						(Q(contour__crop__crop_choice_id=cropchoice_id) | Q(contour__crop__crop_choice_id__isnull=True)) 
+					)\
+					.annotate(total_size=Sum('contour__crop__size'))\
+					.values()[0]
 		
 		town['tasks'] = tasks
 		return Response(town)
+
+
+class TasksOfCropChoiceInTownInDate(APIView):
+	def get(self, request, town_id, date, cropchoice_id):
+		try:
+			date = datetime.datetime.strptime(date, '%Y-%m-%d').date()		
+		except:
+			return Response({'details': 'Not valid date'}, status.HTTP_400_BAD_REQUEST)
+
+		year = cotton_year_in_date(date)
+
+		town = Town.objects\
+					.filter(id=town_id, contour__crop__year=year)\
+					.annotate(total_size=Sum('contour__crop__size'))\
+					.values()
+		
+		if len(town) == 0: 
+			return Response({'details': f'no crops in year {year}'}, status.HTTP_204_NO_CONTENT)
+		else: town = town[0]
+
+		tasks = Task.objects\
+					.filter(
+						crop_choice_id=cropchoice_id, 
+						taskprogress__crop__year=year,
+						taskprogress__crop__contour__town_id=town_id,
+						taskprogress__date__lte=date
+					)\
+					.annotate(completed_size=Sum('taskprogress__size'))\
+					.values()
+
+		if len(tasks)==0:
+			return Response({'details': f'no tasks has been done in this period (from {year-1}-11-01 to {date})'}, status.HTTP_204_NO_CONTENT)
+ 	
+		town['tasks'] = tasks
+		return Response(town) 
+
+
+class TasksOfCropChoiceInDistrictInDate(APIView):
+	def get(self, request, cropchoice_id, district_id, date):
+		try:
+			date = datetime.datetime.strptime(date, '%Y-%m-%d').date()		
+		except:
+			return Response({'details': 'Not valid date'}, status.HTTP_400_BAD_REQUEST)
+		
+		year = cotton_year_in_date(date)
+
+		district = District.objects\
+						.filter(
+							id=district_id, 
+							town__contour__crop__year=year, 
+							town__contour__crop__crop_choice_id=cropchoice_id
+						)\
+						.annotate(total_size=Sum('town__contour__crop__size'))\
+						.values()
+		
+		if len(district) == 0: 
+			return Response({'details': f'no crops in year {year}'}, status.HTTP_204_NO_CONTENT)
+		else: district = district[0]
+		
+		tasks = Task.objects\
+					.filter(
+						crop_choice_id=cropchoice_id, 
+						taskprogress__crop__year=year,
+						taskprogress__crop__contour__town__district_id=district_id
+						)\
+					.annotate(completed_size=Sum('taskprogress__size'))\
+					.values()
+		
+		if len(tasks)==0:
+			return Response({'details': f'no tasks has been done in this period (from {year-1}-11-01 to {date})'}, status.HTTP_204_NO_CONTENT)
+ 		
+		district['tasks'] = tasks
+		
+		return Response(town)
+
 
 
 '''
@@ -155,13 +242,16 @@ class CreateCrop(APIView):
 		serialized_crop = CropSerializer(crop).data
 		return Response(serialized_crop)
 
+
 class UpdateCrop(UpdateAPIView):
 	queryset = Crop.objects.all()
 	serializer_class = CropSerializer
 
+
 class DeleteCrop(DestroyAPIView):
 	queryset = Crop.objects.all()
 	serializer_class = CropSerializer
+
 
 class CropsInContour(APIView):
 	def get(self, request, pk):
@@ -179,6 +269,7 @@ TASKPROGRESS VIEWS HERE
 class CreateTaskProgress(CreateAPIView):
 	queryset = TaskProgress.objects.all()
 	serializer_class = TaskProgressSerializer
+
 
 class CreateTaskProgressesInDate(APIView):
 	# in the lines below, task progress referenced as tp
@@ -217,9 +308,11 @@ class UpdateTaskProgress(UpdateAPIView):
 	queryset = TaskProgress.objects.all()
 	serializer_class = TaskProgressSerializer
 
+
 class DeleteTaskProgress(DestroyAPIView):
 	queryset = TaskProgress.objects.all()
 	serializer_class = TaskProgressSerializer
+
 
 class TaskProgressesInContour(APIView):
 	def get(self, request, pk):
@@ -233,111 +326,5 @@ class TaskProgressesOfTaskByContoursInYear(APIView):
 		serialized_task_progresses = TaskProgressWithContourSerializer(task_progresses, many=True).data
 		dates = set(tp['date'] for tp in serialized_task_progresses)
 		return Response({'dates': dates, 'tps': serialized_task_progresses})
-
-
-class TaskProgressesOfCropChoiceByTownInDistrictInDate(APIView):
-	def get(self, request, district_id, date, cropchoice_id):
-		try:
-			date = datetime.datetime.strptime(date, '%Y-%m-%d').date()		
-		except:
-			return Response({'details': 'Not valid date'}, status.HTTP_400_BAD_REQUEST)
-		year = date.year
-		month = date.month
-
-		if month >= 11: year +=1
-
-		task_progresses = TaskProgress.objects.raw(
-		'''
-			SELECT tp.task_id as id, sum(tp.size) as completed_size, contour.town_id, towns.total_size, towns.name, towns.number_of_contours
-			from core_taskprogress as tp
-			right join core_crop as crop on tp.crop_id=crop.id
-			left join core_cropchoice as cropchoice on cropchoice.id=crop.crop_choice_id
-			left join locations_contour as contour on crop.contour_id=contour.id
-			right join (
-				SELECT town.id, town.name, sum(crop.size) as total_size, count(contour.id) as number_of_contours
-				FROM core_crop as crop 
-				left JOIN locations_contour as contour ON crop.contour_id = contour.id
-				right join locations_town as town on contour.town_id = town.id
-				WHERE (crop.crop_choice_id = %s or crop.crop_choice_id is null) and (crop.year=%s or crop.year is null) and town.district_id=%s 
-				group by town.id 
-			) as towns on contour.town_id = towns.id
-			where (crop.crop_choice_id=%s or crop.crop_choice_id is null) and (crop.year=%s or crop.year is null) and (tp.date<=%s or tp.date is null)
-			group by contour.town_id, tp.task_id, towns.id, towns.total_size, towns.name, towns.number_of_contours
-		''',
-			[cropchoice_id, year, district_id, cropchoice_id, year, date]
-			)
-		serialized_task_progresses = to_dict_from_raw(task_progresses)
-
-		town_set = set(town['town_id'] for town in serialized_task_progresses)
-		if None in town_set and len(town_set) == 1:
-			return Response({'details': f'no tasks has been done in this period (from {year-1}-11-01 to {date})'}, status.HTTP_204_NO_CONTENT)
-		return Response(serialized_task_progresses) 
-		
-
-class TaskProgressesOfCropChoiceByDistrictInRegionInDate(APIView):
-	def get(self, request, date, region, cropchoice_id):
-		region = 8
-		try:
-			date = datetime.datetime.strptime(date, '%Y-%m-%d').date()		
-		except:
-			return Response({'details': 'Not valid date'}, status.HTTP_400_BAD_REQUEST)
-		year = date.year
-		month = date.month
-
-		if month >= 11: year +=1
-
-		task_progresses = TaskProgress.objects.raw(
-			'''
-			SELECT task.id, task.title, sum(tp.size) as completed_size, town.district_id, districts.name, districts.total_size, districts.number_of_contours
-			from core_taskprogress as tp
-			right join core_crop as crop on tp.crop_id=crop.id
-			left join core_task as task on tp.task_id = task.id
-			left join core_cropchoice as cropchoice on cropchoice.id=crop.crop_choice_id
-			left join locations_contour as contour on crop.contour_id=contour.id
-			left join locations_town as town on contour.town_id=town.id
-			right join (
-				SELECT district.id, district.name, sum(crop.size) as total_size, count(contour.id) as number_of_contours
-				FROM core_crop as crop 
-				left JOIN locations_contour as contour ON crop.contour_id = contour.id
-				right join locations_town as town on contour.town_id = town.id
-				right join locations_district as district on town.district_id = district.id 
-				WHERE (crop.crop_choice_id = %s or crop.crop_choice_id is null) and (crop.year=%s or crop.year is null) and district.region=%s
-				group by district.id
-			) as districts on town.district_id = districts.id
-			where (crop.crop_choice_id=%s or crop.crop_choice_id is null) and (crop.year=%s or crop.year is null) and (tp.date<=%s or tp.date is null)
-			group by task.id, town.district_id, districts.name, districts.total_size, districts.number_of_contours
-			''', [cropchoice_id, year, region, cropchoice_id, year, date]
-		)
-		serialized_task_progresses = to_dict_from_raw(task_progresses)
-
-		district_set = set(district['district_id'] for district in serialized_task_progresses)
-		
-		if None in district_set and len(district_set) == 1:
-			return Response({'details': f'no tasks has been done in this period (from {year-1}-11-01 to {date})'}, status.HTTP_204_NO_CONTENT)
-
-		return Response(serialized_task_progresses)
-
-
-class ListTaskProgressesByTownInDistrictInMonth(APIView):
-	# Get TaskProgresses(TP) by towns in district. Output will be sum of TP in HE
-	def get(self, request, district_id, month, year):
-		task_progresses = TaskProgress.objects.raw(
-		'SELECT task.id AS id, task.title,  sum(tp.size), town.name \
-			FROM core_taskprogress AS tp \
-			LEFT JOIN core_task AS task ON tp.task_id=task.id \
-			LEFT JOIN core_crop AS crop ON crop.id=tp.crop_id \
-			LEFT JOIN locations_contour AS contour ON crop.contour_id=contour.id \
-			LEFT JOIN locations_town AS town ON town.id=contour.town_id \
-			WHERE town.district_id=%s AND MONTH(tp.date)=%s AND YEAR(tp.date)=%s\
-			GROUP by task.id, town.id',
-			[district_id, month, year]
-			)
-		data = []
-		for tp in task_progresses:
-			item = tp.__dict__
-			item.pop('_state')
-			data.append(item)
-			print(item)
-		return Response(data)
 
 

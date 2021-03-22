@@ -1,5 +1,9 @@
+#django
 from django.db import transaction
+from django.core.cache import cache
 from django.db.models import Count
+
+#rest framework
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions, status
@@ -11,12 +15,14 @@ from rest_framework.generics import (
 	DestroyAPIView
 )
 
+#models
 from accounts.models import (
 	LocalSupervisor, 
 	Farmer, 
 	Account as User
 )
 
+#serializers
 from .serializers import ( 
 	DistrictSerializer, 
 	TownSerializer, 
@@ -24,16 +30,26 @@ from .serializers import (
 	ContourWithFarmerSerializer
 )
 
-# region views here
 
+
+# region views here
 class LocationsInRegions(APIView):
 	@transaction.atomic
 	def get(self, request, pk):
+		data = cache.get('locations')
+		if data:
+			return Response(data)
+
 		towns = Town.objects.filter(district__region=pk).values()
-		districts = District.objects.filter(region=pk)\
-		.annotate(farmers=Count('farmer'), contours=Count('town'))\
-		.values()
-		return Response({'districts': districts, 'towns': towns}, status.HTTP_200_OK)
+		districts = District.objects\
+						.filter(region=pk)\
+						.annotate(
+							farmers=Count('farmer', distinct=True), 
+							contours=Count('town__contour', distinct=True)
+						)
+		cache.set('locations', {'districts': districts.values(), 'towns': towns}, 7200)
+
+		return Response({'districts': districts.values(), 'towns': towns})
 
 
 # district views here
@@ -49,13 +65,6 @@ class DeleteDistrict(DestroyAPIView):
 	queryset = District.objects.all()
 	serializer_class = DistrictSerializer
 
-class DistrictList(APIView):
-	def get(self, request, region_id):
-		districts = District.objects\
-			.filter(region=region_id)\
-			.annotate(farmers=Count('farmer'), contours=Count('contour'))
-		return Response(districts.values())
-
 
 # town views here
 class CreateTown(CreateAPIView):
@@ -69,11 +78,6 @@ class UpdateTown(UpdateAPIView):
 class DeleteTown(DestroyAPIView):
 	queryset = Town.objects.all()
 	serializer_class = TownSerializer
-
-class TownList(APIView):
-	def get(self, request, district_id):
-		towns = Town.objects.filter(district_id=district_id)
-		return Response(towns.values())
 
 
 # contour views here

@@ -50,7 +50,7 @@ class AutoLogin(APIView):
 			elif user.role == 5:
 				serialized_user = TownObserverSerializer(user).data
 			
-			return Response({'token': token.key, 'user': serialized_user}, status=status.HTTP_200_OK)
+			return Response({'token': token.key, 'user': serialized_user})
 
 		return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -104,7 +104,7 @@ class LoginEditor(APIView):
 			if user.is_active and user.role == 3:
 				token, created = Token.objects.get_or_create(user=user)
 				serialized_user = EditorSerializer(user).data
-				return Response({'token': token.key, 'user': serialized_user}, status=status.HTTP_200_OK)
+				return Response({'token': token.key, 'user': serialized_user})
 			else:
 				return Response({"details": 'Only editor is allowed'}, status.HTTP_403_FORBIDDEN)
 		return Response({"details": 'Login or password is wrong'}, status.HTTP_401_UNAUTHORIZED)
@@ -152,8 +152,9 @@ class UpdateSupervisor(APIView):
 		supervisor.town_id = request.data.get('town_id', supervisor.town_id)
 		supervisor.user.save()
 		supervisor.save()
+		serialized_user = SupervisorGetSerializer(supervisor).data
 
-		return Response(status=status.HTTP_200_OK)
+		return Response(serialized_user, status=status.HTTP_200_OK)
 	
 		
 class SupervisorsInRegion(APIView):

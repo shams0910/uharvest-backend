@@ -9,13 +9,11 @@ urlpatterns = [
 	path('create-district/', views.CreateDistrict.as_view()),
 	path('update-district/<int:pk>/', views.UpdateDistrict.as_view()),
 	path('delete-district/<int:pk>/', views.DeleteDistrict.as_view()),
-	path('districts-in-region/<int:region_id>/', views.DistrictList().as_view()),
 	
 	# town urls here
 	path('create-town/', views.CreateTown.as_view()),
 	path('update-town/<int:pk>/', views.UpdateTown.as_view()),
 	path('delete-town/<int:pk>/', views.DeleteTown.as_view()),
-	path('towns-in-district/<int:district_id>/', views.TownList.as_view()),
 
 	# contour urls here
 	path('create-contour/', views.CreateContour.as_view()),
