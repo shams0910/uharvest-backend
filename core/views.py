@@ -69,8 +69,8 @@ class CropChoicesWithTasks(APIView):
 					.values()
 		
 
-		last_7_days = tuple( (today - datetime.timedelta(days=n)).strftime('%Y-%m-%d') for n in range(1,7) )
-
+		last_7_days = tuple( (today - datetime.timedelta(days=n)).strftime('%Y-%m-%d') for n in range(0,7) )
+		print(last_7_days)
 		tp_of_last_7_days = TaskProgress.objects.raw(
 								'''
 								SELECT tp.date, sum(tp.size), tp.task_id as id
@@ -84,7 +84,13 @@ class CropChoicesWithTasks(APIView):
 		tp_of_last_7_days_serialized = to_dict_from_raw(tp_of_last_7_days)
 
 		for task in tasks:
-			tp_of_current_task = [tp for tp in tp_of_last_7_days_serialized if tp['id']==task['id']]
+			tp_of_current_task = [tp for tp in tp_of_last_7_days_serialized if tp['id'] == task['id']]
+			existing_dates = [tp['date'].strftime('%Y-%m-%d') for tp in tp_of_current_task]
+			print(existing_dates, 'here')
+			for date in last_7_days:
+				if date in existing_dates: pass
+				else: tp_of_current_task.append({'id': None, "date": date, 'sum':0}) 
+			
 			task['tp_of_last_7_days'] = tp_of_current_task
 
 		cropchoices = CropChoice.objects\
@@ -106,18 +112,18 @@ TASK VIEWS HERE
 class TasksOfCropChoiceInYear(APIView):
 	def get(self, request, cropchoice_id, year):
 		tasks = Task.objects.raw(
-			'SELECT task.*, sum(tp.size) as completed_size, crop_choices.sum as total_size, min(crop.year) as year\
+			'SELECT task.*, sum(tp.size) as completed_size, crop_choices.sum as total_size, min(crop_choices.year) as year\
 				from core_task as task\
 				left join core_taskprogress as tp on tp.task_id=task.id\
 				left join core_crop as crop on crop.id=tp.crop_id\
 				left join locations_contour as contour on contour.id=crop.contour_id\
 				left join (\
-					select sum(crop.size), crop.crop_choice_id\
+					select sum(crop.size), crop.crop_choice_id, min(crop.year) as year\
 					from core_crop as crop\
 					left join locations_contour as contour on crop.contour_id=contour.id\
 					where contour.supervisor_id=%s and crop.crop_choice_id=%s and crop.year=%s\
 					group by crop_choice_id\
-				) as crop_choices on crop_choices.crop_choice_id=crop.crop_choice_id\
+				) as crop_choices on crop_choices.crop_choice_id=task.crop_choice_id\
 				where (contour.supervisor_id=%s or contour.supervisor_id is null) \
 				and task.crop_choice_id=%s and (crop.year=%s or crop.year is null)\
 				group by task.id, crop_choices.sum', [request.user.id, cropchoice_id, year, request.user.id, cropchoice_id, year])
@@ -133,23 +139,28 @@ class TasksOfCropChoiceInYear(APIView):
 class TasksOfCropChoiceInTown(APIView):
 	def get(self, request, cropchoice_id, town_id):
 		year = cotton_year_in_date()
-		tasks = Task.objects\
-					.filter(
-						crop_choice_id=cropchoice_id, 
-						taskprogress__crop__year=year,
-						taskprogress__crop__contour__town_id=town_id
-					)\
-					.annotate(completed_size=Sum('taskprogress__size'))\
-					.values()
-		
+
 		town = Town.objects\
-					.filter(
-						Q(id=town_id) & (Q(contour__crop__year=year) | Q(contour__crop__year__isnull=True)), 
-						(Q(contour__crop__crop_choice_id=cropchoice_id) | Q(contour__crop__crop_choice_id__isnull=True)) 
-					)\
+					.filter(id=town_id, contour__crop__year=year)\
 					.annotate(total_size=Sum('contour__crop__size'))\
-					.values()[0]
+					.values()
+
+		if len(town) == 0: 
+			return Response({'details': f'no crops in year {year}'}, status.HTTP_204_NO_CONTENT)
+		else: town = town[0]
+
+		tasks = Task.objects\
+				.filter(
+					crop_choice_id=cropchoice_id, 
+					taskprogress__crop__year=year,
+					taskprogress__crop__contour__town_id=town_id
+				)\
+				.annotate(completed_size=Sum('taskprogress__size'))\
+				.values()
 		
+		# if len(tasks)==0:
+		# 	return Response({'details': f'no tasks has been done in this year {year}'}, status.HTTP_204_NO_CONTENT)
+ 	
 		town['tasks'] = tasks
 		return Response(town)
 
@@ -182,9 +193,6 @@ class TasksOfCropChoiceInTownInDate(APIView):
 					.annotate(completed_size=Sum('taskprogress__size'))\
 					.values()
 
-		if len(tasks)==0:
-			return Response({'details': f'no tasks has been done in this period (from {year-1}-11-01 to {date})'}, status.HTTP_204_NO_CONTENT)
- 	
 		town['tasks'] = tasks
 		return Response(town) 
 
@@ -220,12 +228,9 @@ class TasksOfCropChoiceInDistrictInDate(APIView):
 					.annotate(completed_size=Sum('taskprogress__size'))\
 					.values()
 		
-		if len(tasks)==0:
-			return Response({'details': f'no tasks has been done in this period (from {year-1}-11-01 to {date})'}, status.HTTP_204_NO_CONTENT)
- 		
 		district['tasks'] = tasks
 		
-		return Response(town)
+		return Response(district)
 
 
 
