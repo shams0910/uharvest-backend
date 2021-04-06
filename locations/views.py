@@ -1,6 +1,6 @@
 #django
 from django.db import transaction
-from django.core.cache import cache
+# from django.core.cache import cache
 from django.db.models import Count
 
 #rest framework
@@ -36,9 +36,6 @@ from .serializers import (
 class LocationsInRegions(APIView):
 	@transaction.atomic
 	def get(self, request, pk):
-		data = cache.get('locations')
-		if data:
-			return Response(data)
 
 		towns = Town.objects.filter(district__region=pk).values()
 		districts = District.objects\
@@ -47,8 +44,6 @@ class LocationsInRegions(APIView):
 							farmers=Count('farmer', distinct=True), 
 							contours=Count('town__contour', distinct=True)
 						)
-		cache.set('locations', {'districts': districts.values(), 'towns': towns}, 7200)
-
 		return Response({'districts': districts.values(), 'towns': towns})
 
 

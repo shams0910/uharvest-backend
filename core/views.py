@@ -37,12 +37,22 @@ def to_dict_from_raw(queryset):
 		data.append(item)
 	return data
 
+
 def cotton_year_in_date(date=datetime.date.today()):
 	year = date.year
 	month = date.month
-	if month >= 11: year +=1
+	if month >= 11: 
+		year +=1
 	return year
 
+
+def to_system_date(date):
+	month = date.month
+	if month >= 11: 
+		date = date.replace(year=2020)
+	else: 
+		date = date.replace(year=2021)
+	return date 
 
 	
 
@@ -62,15 +72,25 @@ class CropChoicesWithCropGroups(APIView):
 
 class CropChoicesWithTasks(APIView):
 	def get(self, request, region):
-		today = datetime.date(2021,1,13)
-		tasks = Task.objects\
-					.filter(start_date__lte=today, end_date__gte=today, taskprogress__crop__year=2021)\
-					.annotate(completed_size = Sum('taskprogress__size'))\
-					.values()
-		
+		today = datetime.date.today()
+		systemdate = to_system_date(today)
+		year = cotton_year_in_date()
+
+		tasks = Task.objects.raw(
+					'''
+					SELECT task.*, coalesce(sum(tp.size), 0) as completed_size
+					from core_task as task 
+					left join core_taskprogress as tp on tp.task_id=task.id
+					left join core_crop as crop on crop.id=tp.crop_id and crop.year=%s
+					where %s between task.start_date and task.end_date
+					group by task.id
+					''', [year, systemdate]
+			)
+		tasks = to_dict_from_raw(tasks)
+
 
 		last_7_days = tuple( (today - datetime.timedelta(days=n)).strftime('%Y-%m-%d') for n in range(0,7) )
-		print(last_7_days)
+
 		tp_of_last_7_days = TaskProgress.objects.raw(
 								'''
 								SELECT tp.date, sum(tp.size), tp.task_id as id
@@ -80,13 +100,12 @@ class CropChoicesWithTasks(APIView):
 								group by tp.date, tp.task_id
 								''', [last_7_days]
 							)
-
 		tp_of_last_7_days_serialized = to_dict_from_raw(tp_of_last_7_days)
 
 		for task in tasks:
 			tp_of_current_task = [tp for tp in tp_of_last_7_days_serialized if tp['id'] == task['id']]
 			existing_dates = [tp['date'].strftime('%Y-%m-%d') for tp in tp_of_current_task]
-			print(existing_dates, 'here')
+			
 			for date in last_7_days:
 				if date in existing_dates: pass
 				else: tp_of_current_task.append({'id': None, "date": date, 'sum':0}) 
@@ -157,9 +176,6 @@ class TasksOfCropChoiceInTown(APIView):
 				)\
 				.annotate(completed_size=Sum('taskprogress__size'))\
 				.values()
-		
-		# if len(tasks)==0:
-		# 	return Response({'details': f'no tasks has been done in this year {year}'}, status.HTTP_204_NO_CONTENT)
  	
 		town['tasks'] = tasks
 		return Response(town)
@@ -223,7 +239,8 @@ class TasksOfCropChoiceInDistrictInDate(APIView):
 					.filter(
 						crop_choice_id=cropchoice_id, 
 						taskprogress__crop__year=year,
-						taskprogress__crop__contour__town__district_id=district_id
+						taskprogress__crop__contour__town__district_id=district_id,
+						taskprogress__date__lte=date
 						)\
 					.annotate(completed_size=Sum('taskprogress__size'))\
 					.values()

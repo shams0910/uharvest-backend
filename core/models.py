@@ -58,4 +58,4 @@ class TaskProgress(models.Model):
 		unique_together = [['task', 'crop', 'date']]
 
 	def __str__(self):
-		return f'{self.date} || {self.task.title} || {self.crop}'
+		return f'{self.date} || {self.task.title} || {self.crop} || {self.size}'

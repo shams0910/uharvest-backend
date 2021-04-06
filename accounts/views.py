@@ -44,7 +44,7 @@ class AutoLogin(APIView):
 			elif user.role == 6:
 				serialized_user = SupervisorGetSerializer(user).data
 			elif user.role == 2:
-				serialized_user = SupervisorGetSerializer(user).data
+				serialized_user = GovernorSerializer(user).data
 			elif user.role == 4:
 				serialized_user = DistrictObserverSerializer(user).data
 			elif user.role == 5:
@@ -80,8 +80,8 @@ class DeleteUser(APIView):
 			user = User.objects.get(pk=pk).delete()
 		except User.DoesNotExist:
 			return Response('User not found', status=status.HTTP_404_NOT_FOUND)
-		except User.IntegrityError:
-			return Response({'details': 'The user you trying to delete has relations'})
+		except IntegrityError:
+			return Response({'details': "The user you trying to delete has relations"}, status.HTTP_403_FORBIDDEN)
 		
 		return Response('User deleted', status=status.HTTP_204_NO_CONTENT)
 
@@ -97,7 +97,7 @@ class LoginEditor(APIView):
 	permission_classes = []
 	def post(self, request):
 		user = authenticate(
-			username=request.data.get('username'), 
+			phone=request.data.get('phone'), 
 			password=request.data.get("password")
 		)
 		if user is not None:
@@ -170,7 +170,7 @@ class LoginSupervisor(APIView):
 	# x9shSD5fvs supervisor1
 	def post(self, request):
 		user = authenticate(
-			username=request.data.get('username'), 
+			phone=request.data.get('phone'), 
 			password=request.data.get("password")
 		)
 		if user is not None:
@@ -230,7 +230,6 @@ class UpdateObserver(APIView):
 			user = User.objects.get(pk=pk)
 		except User.DoesNotExist as e:
 			return Response({'details': f'{e}'})
-		user.username = request.data.get('username', user.username)
 		user.first_name = request.data.get('first_name', user.first_name)
 		user.last_name = request.data.get('last_name', user.username)
 		user.phone = request.data.get('phone', user.phone)
@@ -264,7 +263,7 @@ class LoginObserver(APIView):
 	permission_classes = []
 	def post(self, request):
 		user = authenticate(
-			username=request.data.get('username'), 
+			phone=request.data.get('phone'), 
 			password=request.data.get("password")
 		)
 		if user is not None:

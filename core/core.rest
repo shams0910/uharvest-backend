@@ -23,25 +23,25 @@ Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 # Task APIs
 
 ###
-GET  {{base_url}}/core/tasks-of-cropchoice/2/in-year/2021/
+GET  {{base_url}}/core/tasks-of-cropchoice/1/in-year/2021/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 ###
-GET  {{base_url}}/core/tasks-of-cropchoice/2/in-town/2/
+GET  {{base_url}}/core/tasks-of-cropchoice/1/in-town/4/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 ###
-GET  {{base_url}}/core/tasks-of-cropchoice/2/in-town/2/in-date/2021-11-02/
+GET  {{base_url}}/core/tasks-of-cropchoice/1/in-town/2/in-date/2021-04-04/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 ###
-GET  {{base_url}}/core/tasks-of-cropchoice/1/in-district/1/in-date/2021-01-20/
+GET  {{base_url}}/core/tasks-of-cropchoice/1/in-district/1/in-date/2021-04-04/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 

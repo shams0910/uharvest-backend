@@ -26,7 +26,7 @@ editor serializers
 class EditorSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Account
-		fields = ['id', 'first_name', 'last_name', 'username', 'phone', 'role', 'region']	
+		fields = ['id', 'first_name', 'last_name', 'phone', 'role', 'region']	
 
 
 
@@ -46,7 +46,7 @@ class SupervisorGetSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Account
-		fields = ['id', 'username', 'first_name', 'last_name', 'phone', 'region', 'role', 'localsupervisor']
+		fields = ['id', 'first_name', 'last_name', 'phone', 'region', 'role', 'localsupervisor']
 
 
 
@@ -58,7 +58,7 @@ observer serializers
 class ObserverCreateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Account
-		fields = ['username', 'id', 'first_name', 'last_name', 'phone', 'role']
+		fields = ['id', 'first_name', 'last_name', 'phone', 'role']
 		extra_kwargs = {'password': {'required': False}}
 
 	@transaction.atomic
@@ -75,23 +75,24 @@ class ObserverCreateSerializer(serializers.ModelSerializer):
 
 
 class GovernorSerializer(serializers.ModelSerializer):
+	region_name = serializers.CharField(source='get_region_display')
 	class Meta:
 		model = Account
-		fields = ['username', 'id', 'first_name', 'last_name', 'phone', 'role', 'region']
+		fields = [ 'id', 'first_name', 'last_name', 'phone', 'role', 'region', 'region_name']
 
 
 class DistrictObserverSerializer(serializers.ModelSerializer):
 	district_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 	class Meta:
 		model = Account
-		fields = ['username', 'id', 'first_name', 'last_name', 'phone', 'role', 'region', 'district_set']
+		fields = ['id', 'first_name', 'last_name', 'phone', 'role', 'region', 'district_set']
 
 
 class TownObserverSerializer(serializers.ModelSerializer):
 	town_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 	class Meta:
 		model = Account
-		fields = ['username', 'id', 'first_name', 'last_name', 'phone', 'role', 'region', 'town_set']
+		fields = ['id', 'first_name', 'last_name', 'phone', 'role', 'region', 'town_set']
 
 
 
@@ -111,4 +112,4 @@ class FarmerGetSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Account
-		fields = ['id', 'username', 'first_name', 'last_name', 'phone', 'role', 'farmer']
+		fields = ['id', 'first_name', 'last_name', 'phone', 'role', 'farmer']
