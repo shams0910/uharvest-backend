@@ -249,7 +249,7 @@ class UpdateObserver(APIView):
 
 class ObserversInRegion(APIView):
 	def get(self, request, region_id):
-		observers = User.objects.filter(role__in=[4,5], region=8).values('id', 'last_name', 'first_name', 'username', 'role')
+		observers = User.objects.filter(role__in=[4,5], region=8).values('id', 'last_name', 'first_name', "phone", 'role')
 		districts_of_observers = District.officer.through.objects.filter(district__region=region_id).values('account_id', 'district_id', 'district__name')
 		towns_of_observers = Town.officer.through.objects.filter(town__district__region=region_id).values('account_id', 'town_id', 'town__name')
 		return Response({
