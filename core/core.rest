@@ -29,7 +29,7 @@ Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 
 
 ###
-GET  {{base_url}}/core/tasks-of-cropchoice/1/in-town/4/
+GET  {{base_url}}/core/tasks-of-cropchoice/1/in-town/1/
 Content-Type: application/json
 Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 

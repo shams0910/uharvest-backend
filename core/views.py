@@ -131,21 +131,23 @@ TASK VIEWS HERE
 class TasksOfCropChoiceInYear(APIView):
 	def get(self, request, cropchoice_id, year):
 		tasks = Task.objects.raw(
-			'SELECT task.*, sum(tp.size) as completed_size, crop_choices.sum as total_size, min(crop_choices.year) as year\
-				from core_task as task\
-				left join core_taskprogress as tp on tp.task_id=task.id\
-				left join core_crop as crop on crop.id=tp.crop_id\
-				left join locations_contour as contour on contour.id=crop.contour_id\
-				left join (\
-					select sum(crop.size), crop.crop_choice_id, min(crop.year) as year\
-					from core_crop as crop\
-					left join locations_contour as contour on crop.contour_id=contour.id\
-					where contour.supervisor_id=%s and crop.crop_choice_id=%s and crop.year=%s\
-					group by crop_choice_id\
-				) as crop_choices on crop_choices.crop_choice_id=task.crop_choice_id\
-				where (contour.supervisor_id=%s or contour.supervisor_id is null) \
-				and task.crop_choice_id=%s and (crop.year=%s or crop.year is null)\
-				group by task.id, crop_choices.sum', [request.user.id, cropchoice_id, year, request.user.id, cropchoice_id, year])
+			'''
+			SELECT task.*, sum(tp.size) as completed_size, cropchoices.sum as total_size, min(cropchoices.year) as year
+			from core_task as task
+			left join core_taskprogress as tp on tp.task_id=task.id
+			left join core_crop as crop on crop.id=tp.crop_id and crop.year=%s
+			left join locations_contour as contour on contour.id=crop.contour_id and contour.supervisor_id=%s
+			left join (
+				select sum(crop.size), crop.crop_choice_id, min(crop.year) as year
+				from core_crop as crop
+				left join locations_contour as contour on crop.contour_id=contour.id
+				where contour.supervisor_id=%s and crop.crop_choice_id=%s and crop.year=%s
+				group by crop_choice_id
+			) as cropchoices on cropchoices.crop_choice_id=crop.crop_choice_id 
+			where task.crop_choice_id=%s
+			group by task.id, cropchoices.sum
+			''', [year, request.user.id, request.user.id, cropchoice_id, year, cropchoice_id ])
+		
 		serialized_tasks = to_dict_from_raw(tasks)
 		year_set = set(task['year'] for task in serialized_tasks)
 
@@ -160,7 +162,7 @@ class TasksOfCropChoiceInTown(APIView):
 		year = cotton_year_in_date()
 
 		town = Town.objects\
-					.filter(id=town_id, contour__crop__year=year)\
+					.filter(id=town_id, contour__crop__year=year, contour__crop__crop_choice_id=cropchoice_id)\
 					.annotate(total_size=Sum('contour__crop__size'))\
 					.values()
 
@@ -191,7 +193,7 @@ class TasksOfCropChoiceInTownInDate(APIView):
 		year = cotton_year_in_date(date)
 
 		town = Town.objects\
-					.filter(id=town_id, contour__crop__year=year)\
+					.filter(id=town_id, contour__crop__year=year, contour__crop__crop_choice_id=cropchoice_id)\
 					.annotate(total_size=Sum('contour__crop__size'))\
 					.values()
 		
