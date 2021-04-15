@@ -35,7 +35,7 @@ class Crop(models.Model):
 	contour = models.ForeignKey('locations.Contour', on_delete=models.RESTRICT)
 	description = models.TextField(null=True, blank=True)
 	size = models.DecimalField(max_digits=20, decimal_places=2) # in Hectar; on what size the crop was planted
-	seed = models.CharField(max_length=30)
+	seed = models.CharField(max_length=30, null=True)
 	harvest_size = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True) # in tons; 
 	year = models.IntegerField(null=True)
 	created_at = models.DateTimeField(auto_now_add=True)

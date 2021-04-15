@@ -146,6 +146,7 @@ class UpdateSupervisor(APIView):
 			supervisor = LocalSupervisor.objects.select_related('user').get(pk=pk)
 		except Exception as e:
 			return Response({'details' : f'{e}'}, status.HTTP_400_BAD_REQUEST)
+
 		supervisor.user.first_name = request.data.get('first_name', supervisor.user.first_name)
 		supervisor.user.last_name = request.data.get('last_name', supervisor.user.last_name)
 		supervisor.user.phone = request.data.get('phone', supervisor.user.phone)
@@ -167,7 +168,6 @@ class SupervisorsInRegion(APIView):
 
 class LoginSupervisor(APIView):
 	permission_classes = []
-	# x9shSD5fvs supervisor1
 	def post(self, request):
 		user = authenticate(
 			phone=request.data.get('phone'), 
@@ -256,7 +256,7 @@ class CreateObserver(CreateAPIView):
 
 class UpdateObserver(APIView):
 	@transaction.atomic
-	def post(self, request, pk):
+	def put(self, request, pk):
 		try: 
 			user = User.objects.get(pk=pk)
 		except User.DoesNotExist as e:
@@ -268,14 +268,18 @@ class UpdateObserver(APIView):
 		role = request.data.get('role')
 		towns = request.data.get('towns', None)
 		districts = request.data.get('districts', None)
-		if role == 4 and districts:
+		user.save()
+		if role == 4 and districts and len(districts)!=0:
 			user.district_set.clear()
 			user.district_set.add(*districts)
-		elif role == 5 and towns:
-			user.district_set.clear()
-			user.district_set.add(*towns)
-		user.save()
-		return Response(UserSerializer(user).data)
+			return Response(DistrictObserverSerializer(user).data)
+		elif role == 5 and towns  and len(towns)!=0:
+			user.town_set.clear()
+			user.town_set.add(*towns)
+			return Response(TownObserverSerializer(user).data)
+
+		
+		
 
 
 class ObserversInRegion(APIView):

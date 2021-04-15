@@ -23,7 +23,7 @@ urlpatterns = [
 	# observer urls here
 	path('login-observer/', views.LoginObserver.as_view()),
 	path('create-observer/', views.CreateObserver.as_view()),
-	# path('update-observer/<int:pk>/', views.UpdateSupervisor.as_view()),
+	path('update-observer/<int:pk>/', views.UpdateObserver.as_view()),
 	path('observers-in-region/<int:region_id>/', views.ObserversInRegion.as_view()),
 	# most of observer related views will be in lacations app or in core app
 
