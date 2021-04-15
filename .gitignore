@@ -1,4 +1,4 @@
 uharvestenv/
 *.env
 send-sms.py
-# *.zip
+*.zip
