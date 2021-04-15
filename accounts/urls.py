@@ -16,7 +16,7 @@ urlpatterns = [
 
 	# farmer urls here
 	path('create-farmer/', views.CreateFarmer.as_view()),
-	# path('update-farmer/<int:pk>/', views.UpdateFarmer.as_view()),
+	path('update-farmer/<int:pk>/', views.UpdateFarmer.as_view()),
 	path('farmers-in-district/<int:district_id>/', views.FarmersInDistrict.as_view()),
 	# add farmer contours
 

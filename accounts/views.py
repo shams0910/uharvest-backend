@@ -197,7 +197,7 @@ class CreateFarmer(APIView):
 			user = User.objects.create_user(**request.data, password=password)
 		except IntegrityError as e:
 			return Response({'details': f'{e}'}, status.HTTP_409_CONFLICT)
-		# except 
+
 		profile = Farmer.objects.get_or_create(user=user, district_id=district)
 		serialized_user = FarmerGetSerializer(user).data
 		return Response(serialized_user, status=status.HTTP_201_CREATED)
@@ -210,6 +210,37 @@ class FarmersInDistrict(APIView):
 			.filter(farmer__district_id=district_id)
 		serialized_farmers = FarmerGetSerializer(farmers_in_district, many=True).data
 		return Response(serialized_farmers)
+
+
+class UpdateFarmer(APIView):
+	def put(self, request, pk):
+		try:
+			user = User.objects.select_related('farmer').get(id=pk)
+		except Exception as e:
+			return Response({'details' : f'{e}'}, status.HTTP_400_BAD_REQUEST)
+
+		# if user.phone != request.get('phone', user.phone):
+		# 	pass
+
+		user.passport_number = request.data.get('passport_number', user.passport_number)
+		user.first_name = request.data.get('first_name', user.first_name)
+		user.last_name = request.data.get('last_name', user.last_name)
+		user.passport_number = request.data.get('passport_number', user.passport_number)
+		user.phone = request.data.get('phone', user.phone)
+		user.save()
+
+		# profile update
+		district_id = request.data.get('district', user.farmer.district_id)
+
+		if user.farmer.district_id != district_id:
+			user.farmer.district_id = district_id
+			user.farmer.save()
+
+		serialized_user = FarmerGetSerializer(user).data
+		return Response(serialized_user)
+
+
+
 
 
 
