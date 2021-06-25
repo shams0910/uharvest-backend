@@ -2,3 +2,5 @@ uharvestenv/
 *.env
 send-sms.py
 *.zip
+__pycache__/
+*.py[cod]

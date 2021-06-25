@@ -25,7 +25,7 @@ Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
 ###
 GET  {{base_url}}/core/tasks-of-cropchoice/1/in-year/2021/
 Content-Type: application/json
-Authorization: Token d87601bc37afc1b4eb3b96a2b0f40a4c7242d799
+Authorization: Token 55973358d4e1494a80d6b7be3470a80a771a6dd6
 
 
 ###

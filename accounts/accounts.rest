@@ -55,7 +55,7 @@ POST {{base_url}}/accounts/login-editor/
 Content-Type: application/json
 
 {
-    "username" : "editor",
+    "username" : "998993001106",
     "password" : "hello0909"
 }
 
@@ -67,13 +67,13 @@ Content-Type: application/json
 ###
 POST {{base_url}}/accounts/create-supervisor/
 Content-Type: application/json
-Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+Authorization: Token 11009d41ce2676b1ed91b00821a733c04bfd6794
 
 {
-    "passport_number": "AA919222",
-    "first_name" : "Sharif",
-    "last_name": "Muratov",
-    "phone": "+998905567788",
+    "passport_number": "AA918222",
+    "first_name" : "Momin",
+    "last_name": "Vohidov",
+    "phone": "998905561788",
     "role": 6,
     "town_id": 1,
     "contours_from": 0,
@@ -133,7 +133,7 @@ Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
 {
     "first_name" : "Sharif",
     "last_name": "Muratov",
-    "phone": "998905567788",
+    "phone": "998905567785",
     "role": 5,
     "towns": [1,2], 
     "districts": []
@@ -143,6 +143,8 @@ Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
 ###
 PUT {{base_url}}/accounts/update-observer/45/
 Content-Type: application/json
+Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
+
 
 {
       "last_name": "Xalimjonov",
@@ -164,24 +166,22 @@ Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
 ###
 POST {{base_url}}/accounts/create-farmer/
 Content-Type: application/json
-Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
-
+Authorization: Token 11009d41ce2676b1ed91b00821a733c04bfd6794
 
 {
     "passport_number": "AB5411451",
-    "first_name" : "Sharif",
-    "last_name": "Muratov",
-    "phone": "998905567788",
+    "first_name" : "Erkin",
+    "last_name": "Saidov",
+    "phone": "998905567781",
     "role": 6,
     "district": 1
-
 }
+
 
 ###
 PUT {{base_url}}/accounts/update-farmer/41/
 Content-Type: application/json
 Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
-
 
 {
     "passport_number": "AB5411451",
@@ -189,7 +189,6 @@ Authorization: Token 051b9ec231590fe3573a211bb0260033c112b7dd
     "last_name": "Muratov",
     "phone": "998905567782",
     "district": 1
-
 }
 
 
